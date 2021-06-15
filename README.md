@@ -1,6 +1,7 @@
 # musical-octo-system (actually an OMDB API wrapper)
 ## prerequisites 
   - node v14.15.5
+  - Free up port 8080, please!
   - omdb api key
 ## setting-up
   - clone this repo
