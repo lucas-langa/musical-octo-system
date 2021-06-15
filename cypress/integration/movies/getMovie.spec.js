@@ -13,9 +13,7 @@ describe('OMDB api', () => {
             })).should((response) => {
                 expect(response.status).to.eq(200);
                 expect(response.body.Response).to.eq("True");
-                expect(response.body.Title).to.eq("Batman");
-                // cy.log(JSON.stringify(response.body));
-            });
+                expect(response.body.Title).to.eq("Batman");            });
         })
     })
 })
