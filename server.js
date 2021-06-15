@@ -69,9 +69,9 @@ const movieCalls = {
     },
     searchMovies: (options) => {
         return new Promise((resolve, reject) => {
-            let targetAPI = `${api_url}&s=${options.title}`;
+            let targetAPI = `${api_url}&s=${options.title}&page=${options.page}`;
             if (Object.keys(options).includes('year')) {
-                targetAPI = `${api_url}&s=${options.title}&y=${options.year}`;
+                targetAPI += `&y=${options.year}`;
             }
 
             http.get(targetAPI, (res) => {
@@ -112,58 +112,76 @@ const server = http.createServer(async (req, res) => {
     const queryObject = url.searchParams
     let options = {};
     let data;
+    let validationErrors = [];
 
     url.searchParams.forEach((value, name, _searchParams) => {
-        if (name === 'year' || name === 'id') {
+        if (name === 'id') {
+            const num = value.split('tt')[1];
+            if (isNaN(num)) {
+                validationErrors.push({invalidID:`Invalid input, ${name} should be a number`})
+            }
+        }
+        if (name === 'year' || name === 'page') {
             if (isNaN(value)) {
-                res.writeHead(400, { 'Content-Type': 'text/html' });
-                res.end(`Invalid input, ${name} should be a number`);
+                validationErrors.push({name:`Invalid input, ${name} should be a number`})
+            }
+            if (name === 'page' && (value < 1 && value > 100)) {
+
+                validationErrors.push({invalidPageNumber:`Invalid input, ${name} should be between 1 and 100`});
                 return;
             }
         }
     });
-    switch (url.pathname) {
-        case '/api/search/':
-            try {
-                options.title = queryObject.get('title');
-                options.year = queryObject.has('year') ? queryObject.get('year') : delete options.year;
-                data = await movieCalls.searchMovies(options);
-                res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify(data));
-            } catch (error) {
-                res.writeHead(404, { 'Content-Type': 'application/json' })
-                res.end(error)
-            }
-            break;
-        case '/api/title/':
-            try {
-                options.title = queryObject.get('title');
-                options.year = queryObject.has('year') ? queryObject.get('year') : delete options.year;
-                data = await movieCalls.getMovieByTitle(options);
-                res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify(data));
-            } catch (error) {
-                res.writeHead(404, { 'Content-Type': 'application/json' });
-                res.end(error);
-            }
-            break;
-        case '/api/imdbid/':
-            try {
-                options.id = queryObject.get('id');
-                options.year = queryObject.has('year') ? queryObject.get('year') : delete options.year;
-                data = await movieCalls.getMovieByIMDBID(options);
-                res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify(data));
-            } catch (error) {
-                res.writeHead(404, { 'Content-Type': 'application/json' });
-                res.end(error);
-            }
-            break;
-        default:
-            res.writeHead(400, { 'Content-Type': 'text/html' });
-            res.end('Please check out the docs on how to use this API.');
-            break;
+    if (validationErrors.length > 0) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(validationErrors));
     }
+    else {
+        switch (url.pathname) {
+            case '/api/search/':
+                try {
+                    options.title = queryObject.get('title');
+                    options.page = queryObject.has('page') ? queryObject.get('page') : 1;
+                    options.year = queryObject.has('year') ? queryObject.get('year') : delete options.year;
+                    data = await movieCalls.searchMovies(options);
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify(data));
+                } catch (error) {
+                    res.writeHead(404, { 'Content-Type': 'application/json' })
+                    res.end(error)
+                }
+                break;
+            case '/api/title/':
+                try {
+                    options.title = queryObject.get('title');
+                    options.year = queryObject.has('year') ? queryObject.get('year') : delete options.year;
+                    data = await movieCalls.getMovieByTitle(options);
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify(data));
+                } catch (error) {
+                    res.writeHead(404, { 'Content-Type': 'application/json' });
+                    res.end(error);
+                }
+                break;
+            case '/api/imdbid/':
+                try {
+                    options.id = queryObject.get('id');
+                    options.year = queryObject.has('year') ? queryObject.get('year') : delete options.year;
+                    data = await movieCalls.getMovieByIMDBID(options);
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify(data));
+                } catch (error) {
+                    res.writeHead(404, { 'Content-Type': 'application/json' });
+                    res.end(error);
+                }
+                break;
+            default:
+                res.writeHead(400, { 'Content-Type': 'text/html' });
+                res.end('Please check out the docs on how to use this API.');
+                break;
+        }
+    }
+
 });
 
 
