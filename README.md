@@ -7,6 +7,7 @@
   - no external dependances required
   - run the command:
     APP_URL=http://localhost:8080 NODE_ENV=development API_KEY=GETANAPIKEYFROMOMDB URL=http://www.omdbapi.com/ npx node server.js
+    (YES, it is one command from APP_URL to server.js)
   - start consuming the api with your favorite tool/app i.e curl, insomnia, postman, somefrontendapp etc
   
  ## available endpoints
